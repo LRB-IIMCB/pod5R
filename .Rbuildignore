@@ -1,2 +1,16 @@
 ^pod5R\.Rproj$
 ^\.Rproj\.user$
+^.*\.Rproj$
+^\.Rproj$
+^\.Rhistory$
+^\.RData$
+^\.Rbuildignore$
+^\.local$ # config space
+^native$ # compiled binaries
+^validation$ #QC
+^\.git$
+^\.gitignore$
+^\.Ruserdata$
+^src/Makevars$ # compilation flags for C must be excluded
+^src/.*\.(o|so|a)$ # so tarball would not bloat
+^LICENSE\.md$
