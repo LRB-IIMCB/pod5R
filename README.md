@@ -1,7 +1,9 @@
 <img src="https://img.shields.io/badge/maintained-yes-612a78" alt="maintained - yes">
 
 
-# **An R interface to pod5 file format by Oxford Nanopore Technologies**
+# pod5R
+
+**An R interface to pod5 file format by Oxford Nanopore Technologies**
 
 ## Introduction
 
