@@ -1,5 +1,5 @@
 Package: pod5R
-Title: What the Package Does (One Line, Title Case)
+Title: R Interface to POD5 File Format by Oxford Nanopore Technologies
 Version: 0.1.0
 Authors@R: 
     person(given = "Natalia",
@@ -8,7 +8,9 @@ Authors@R:
            email = "nguminska@iimcb.gov.pl",
            comment = c(ORCID = "0000-0002-4599-2897"))
 Maintainer: <nguminska@iimcb.gov.pl>
-Description: What the package does (one paragraph).
+Description: Reads Oxford Nanopore POD5 files through native POD5 C API. 
+  Supports retrieving of read and run metadata, indexed read selection, 
+  calibrated signal extraction, and processing without requiring Python.
 License: GPL (>= 3)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
@@ -16,7 +18,11 @@ RoxygenNote: 8.0.0
 Imports: 
     Rcpp
 Suggests: 
+    roxygen2,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 URL: https://github.com/LRB-IIMCB/pod5R
 BugReports: https://github.com/LRB-IIMCB/pod5R/issues
+Depends: 
+    R (>= 4.0.0)
+SystemRequirements: C++17, libpod5 (>= 0.3.47)
