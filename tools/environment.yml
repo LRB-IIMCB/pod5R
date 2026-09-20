@@ -1,0 +1,27 @@
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - python=3.11
+  - pip
+  - r-base=4.4
+  - r-rcpp
+  - r-testthat
+  - r-pkgload
+  - r-roxygen2
+  - gcc_linux-64=13
+  - gxx_linux-64=13
+  - gfortran_linux-64=13
+  - cmake>=3.27,<4
+  - ninja
+  - make
+  - pkg-config
+  - git
+  - curl
+  - ca-certificates
+  - autoconf
+  - automake
+  - libtool
+  - perl
+  - patch
