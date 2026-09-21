@@ -9,3 +9,4 @@ bool cpp_check_pod5() {
 
   return true;
 }
+
