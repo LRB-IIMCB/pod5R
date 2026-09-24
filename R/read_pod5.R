@@ -184,3 +184,41 @@ read_pod5_info <- function(file) {
   return(outfile)
 
 }
+
+
+
+#' Read POD5 read identifiers
+#'
+#' Retrieves read identifiers in file order without decompressing signals.
+#'
+#' @inheritParams read_pod5_info
+#'
+#' @returns A character vector of lowercase UUIDs.
+#' @export
+#' @examples
+#' \dontrun{
+#' read_ids <- pod5R::read_pod5_ids("reads.pod5")
+#' }
+read_pod5_ids <- function(file) {
+  #assertions
+  if (missing(file)) {
+    stop("File is missing. Please provide a valid file argument.", call. = FALSE)
+  }
+  reader <- file
+  if (is.character(file)) {
+    reader <- pod5R::open_pod5(file)
+    on.exit(pod5R::close_pod5(reader), add = TRUE)
+  }
+
+  out <- cpp_ids_pod5(reader)
+  return(out)
+}
+
+
+
+
+
+
+
+
+

@@ -108,10 +108,10 @@ List cpp_info_pod5(SEXP pointer) {
   run_info_index_t runs; check(pod5_get_file_run_info_count(r.file, &runs));
   // Construct the R list
   return List::create(_["file_identifier"] = uuid(info.file_identifier),
-                      _["file_version"] = std::to_string(info.version.major) + "." +
-                        std::to_string(info.version.minor) + "." + std::to_string(info.version.revision),
-                        _["num_reads"] = exact(r.offsets.back()), _["num_batches"] = exact(r.offsets.size() - 1),
-                        _["num_runs"] = runs);
+                      _["file_version"] = std::to_string(info.version.major) + "." + std::to_string(info.version.minor) + "." + std::to_string(info.version.revision),
+                      _["num_reads"] = exact(r.offsets.back()),
+                      _["num_batches"] = exact(r.offsets.size() - 1),
+                      _["num_runs"] = runs);
 }
 
 
