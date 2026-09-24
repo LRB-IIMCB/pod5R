@@ -18,17 +18,23 @@ assert_condition <- function(cond, msg = "Assertion failed") {
   return(invisible(TRUE))
 }
 
-#' Title
+#' Validate a non-negative whole number
 #'
-#' @param x
-#' @param name
-#' @param minimum
-#' @param allow_infinite
+#' Checks if the value is a single numeric whole number greater than or equal to
+#' defined minimum. A positive infinity is also accepted.
 #'
-#' @returns
-#' @export
+#' Finite values must be a whole numbers and must not exceed 2^53 -1 (R precision
+#' ceiling).
 #'
-#' @examples
+#' @param x [numeric] value to validate
+#' @param name [character] string which provides a name for 'x' used in the error
+#' message if validation fails
+#' @param minimum [numeric] the minimum allowed value. Default is 0.
+#' @param allow_infinite [logical] decides whether 'Inf' is accepted. Defaults
+#' to "FALSE".
+#'
+#' @returns Invisibly returns "TRUE" if validation passes.
+#' @keywords internal
 .check_number <- function(x, name, minimum = 0, allow_infinite = FALSE) {
 
   assert_condition(
@@ -39,14 +45,19 @@ assert_condition <- function(cond, msg = "Assertion failed") {
   return(invisible(TRUE))
 }
 
-#' Title
+#' Validate POD5 read IDs
 #'
-#' @param read_ids
+#' Validates a vector of POD5 read identifiers and converts them to lowercase
+#' UUID strings.
 #'
-#' @returns
-#' @export
+#' Each read ID must be a non-missing character string containing a valid UUID.
+#' Duplicate read IDs are not allowed.
 #'
-#' @examples
+#' @param read_ids [character] vector of read IDs in UUID format or 'NULL'
+#'
+#' @returns a vector of validated 'read_ids' converted to lowercase or 'NULL'
+#'
+#' @keywords internal
 .check_ids <- function(read_ids){
   if (!is.null(read_ids)){
     asseet_condition(is.character(read_ids) && !anyNA(read_ids),
@@ -65,14 +76,28 @@ assert_condition <- function(cond, msg = "Assertion failed") {
 # NATIVE POD5 READING
 ################################################################################
 
-#' Title
+#' Opens POD5 file through the native C API and stores read batch boundaries.
 #'
-#' @param file
+#' The signals are decoded only on demand. Opening visits every read batch to
+#' retrieve boundaries, so the cost grows accordingly to number of batches.
+#' Reuse a reader for repeated queries.
 #'
-#' @returns
+#' Readers own native resources. Use \code{on.exit(close_pod5(reader))} inside
+#' functions. Garbage collector releases unclosed readers as well. Readers can't
+#' be serialized or shared between R workers. Each worker must open its own reader.
+#' Path inputs to other functions are closed by default.
+#'
+#' @param file [character] a path to a given POD5 file.
+#'
+#' @returns external pointer containing a native reader.
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' reader <- pod5R::open_pod5("example_reads.pod5")
+#' reads <- pod5R::read_pod5(reader)
+#' pod5R::close_pod5(reader)
+#' }
 open_pod5 <- function(file){
 
   #assertions
@@ -94,9 +119,12 @@ open_pod5 <- function(file){
 
 
 
-#' Title
+#' Close a native POD5 reader
 #'
-#' @param reader External pointer returned by \code{open_pod5()}
+#' Closes an open POD5 reader and releases the resources. Closing the same reader repeatedly is safe.
+#' An error is raised when 'reader' is missing.
+#'
+#' @param reader A pod5 reader to close - external pointer returned by \code{open_pod5()}
 #'
 #' @returns invisibly returns \code{NULL}
 #' @export
@@ -118,14 +146,27 @@ close_pod5 <- function(reader){
 
 
 
-#' Title
+#' Read POD5 file information
 #'
-#' @param file
+#' Retrieves the metadata (file identifier, format version, read, batch and counts).
+#' The native \code{file_version} refers to the opened schema and might reflect the
+#' automatic migration and not necessarily the original source version.
 #'
-#' @returns
+#' If 'file' is a character string, the POD5 file is opened internally and automatically
+#' close on function exit. If an existing reader is provided, it is used directly
+#' and is not closed by this function.
+#'
+#' An error is raised when 'file' is missing.
+#'
+#' @param file [character] or external pointer: POD5 path or open native reader
+#'
+#' @returns Named list containing file information
 #' @export
 #'
 #' @examples
+#'\dontrun{
+#'pod5R::read_pod5_info("example_reads.pod5")
+#'}
 read_pod5_info <- function(file) {
 
   #assertions
