@@ -2,6 +2,8 @@
 
 export(close_pod5)
 export(open_pod5)
+export(read_pod5_ids)
 export(read_pod5_info)
+export(read_pod5_runs)
 importFrom(Rcpp,evalCpp)
 useDynLib(pod5R, .registration = TRUE)

@@ -42,11 +42,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_ids_pod5
+CharacterVector cpp_ids_pod5(SEXP pointer);
+RcppExport SEXP _pod5R_cpp_ids_pod5(SEXP pointerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type pointer(pointerSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_ids_pod5(pointer));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cpp_runs_pod5
+List cpp_runs_pod5(SEXP pointer);
+RcppExport SEXP _pod5R_cpp_runs_pod5(SEXP pointerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type pointer(pointerSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_runs_pod5(pointer));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_pod5R_cpp_open_pod5", (DL_FUNC) &_pod5R_cpp_open_pod5, 1},
     {"_pod5R_cpp_close_pod5", (DL_FUNC) &_pod5R_cpp_close_pod5, 1},
     {"_pod5R_cpp_info_pod5", (DL_FUNC) &_pod5R_cpp_info_pod5, 1},
+    {"_pod5R_cpp_ids_pod5", (DL_FUNC) &_pod5R_cpp_ids_pod5, 1},
+    {"_pod5R_cpp_runs_pod5", (DL_FUNC) &_pod5R_cpp_runs_pod5, 1},
     {NULL, NULL, 0}
 };
 

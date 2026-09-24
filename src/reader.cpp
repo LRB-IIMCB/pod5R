@@ -85,15 +85,15 @@ double exact(uint64_t value) {
 }
 }
 
-// [[Rcpp::export]]
 // Open a POD5 file and return an R external pointer
+// [[Rcpp::export]]
 SEXP cpp_open_pod5(std::string path) {
   XPtr<Reader> ptr(new Reader(path), true, Rf_install("pod5r_reader"));
   return ptr;
 }
 
-// [[Rcpp::export]]
 // close an open POD5 reader
+// [[Rcpp::export]]
 void cpp_close_pod5(SEXP pointer) {
   if (TYPEOF(pointer) != EXTPTRSXP || R_ExternalPtrTag(pointer) != Rf_install("pod5r_reader"))
     stop("Please provide a valid POD5 reader.");
@@ -125,31 +125,31 @@ CharacterVector tags(const KeyValueData& data) {
   return values;
 }
   // Convert one POD5 run-information record into an R list
-List run_info(const RunInfoDictData_t& r) {
-  List result;
+  List run_info(const RunInfoDictData_t& r) {
+    List result;
 #define TEXT_FIELD(name) result[#name] = std::string(r.name)
-  TEXT_FIELD(acquisition_id);
-  TEXT_FIELD(experiment_name);
-  TEXT_FIELD(flow_cell_id);
-  TEXT_FIELD(flow_cell_product_code);
-  TEXT_FIELD(protocol_name);
-  TEXT_FIELD(protocol_run_id);
-  TEXT_FIELD(sample_id);
-  TEXT_FIELD(sequencing_kit);
-  TEXT_FIELD(sequencer_position);
-  TEXT_FIELD(sequencer_position_type);
-  TEXT_FIELD(software);
-  TEXT_FIELD(system_name);
-  TEXT_FIELD(system_type);
+    TEXT_FIELD(acquisition_id);
+    TEXT_FIELD(experiment_name);
+    TEXT_FIELD(flow_cell_id);
+    TEXT_FIELD(flow_cell_product_code);
+    TEXT_FIELD(protocol_name);
+    TEXT_FIELD(protocol_run_id);
+    TEXT_FIELD(sample_id);
+    TEXT_FIELD(sequencing_kit);
+    TEXT_FIELD(sequencer_position);
+    TEXT_FIELD(sequencer_position_type);
+    TEXT_FIELD(software);
+    TEXT_FIELD(system_name);
+    TEXT_FIELD(system_type);
 #undef TEXT_FIELD
-  // POD5 stores these timestamps as integer millisecond
-  result["acquisition_start_time_ms"] = static_cast<double>(r.acquisition_start_time_ms);
-  result["protocol_start_time_ms"] = static_cast<double>(r.protocol_start_time_ms);
-  result["adc_max"] = r.adc_max; result["adc_min"] = r.adc_min; result["sample_rate"] =
-    r.sample_rate;
-  result["context_tags"] = tags(r.context_tags); result["tracking_id"] = tags(r.tracking_id);
-  return result;
-}
+    // POD5 stores these timestamps as integer millisecond
+    result["acquisition_start_time_ms"] = static_cast<double>(r.acquisition_start_time_ms);
+    result["protocol_start_time_ms"] = static_cast<double>(r.protocol_start_time_ms);
+    result["adc_max"] = r.adc_max; result["adc_min"] = r.adc_min; result["sample_rate"] =
+      r.sample_rate;
+    result["context_tags"] = tags(r.context_tags); result["tracking_id"] = tags(r.tracking_id);
+    return result;
+  }
 }
 
 

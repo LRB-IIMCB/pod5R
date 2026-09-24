@@ -13,3 +13,11 @@ cpp_info_pod5 <- function(pointer) {
     .Call(`_pod5R_cpp_info_pod5`, pointer)
 }
 
+cpp_ids_pod5 <- function(pointer) {
+    .Call(`_pod5R_cpp_ids_pod5`, pointer)
+}
+
+cpp_runs_pod5 <- function(pointer) {
+    .Call(`_pod5R_cpp_runs_pod5`, pointer)
+}
+

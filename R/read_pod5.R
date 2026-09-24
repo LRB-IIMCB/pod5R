@@ -216,7 +216,37 @@ read_pod5_ids <- function(file) {
 
 
 
-
+#' Read POD5 sequencing run information
+#'
+#' Fetch acquisition and protocol identifiers, sample rate, device details,
+#' calibration limits and the context.
+#'
+#' Time stamps in milliseconds. Read metadata links to runs through
+#' \code{acquisition_id}, rather than batch indices.
+#'
+#' @inheritParams read_pod5_info
+#'
+#' @returns A list named by acquisition identifier. Each element contains a named
+#' list describing one run, including named character vectors for dictionaries.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' runs <- pod5R::read_pod5_runs("reads.pod5")
+#' }
+read_pod5_runs <- function(file) {
+  #assertions
+  if (missing(file)) {
+    stop("File is missing. Please provide a valid file argument.", call. = FALSE)
+  }
+  reader <- file
+  if (is.character(file)) {
+    reader <- pod5R::open_pod5(file)
+    on.exit(pod5R::close_pod5(reader), add = TRUE)
+  }
+  out <- cpp_runs_pod5(reader)
+  return(out)
+}
 
 
 
