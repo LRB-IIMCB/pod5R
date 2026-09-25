@@ -376,6 +376,83 @@ extract_pod5_signal <- function(file,
 
 
 
+#' Process POD5 reads in groups
+#'
+#' Calls an R function for consecutive groups of reads from a POD5 file or an
+#' existing POD5 reader. Each group is read independently, passed to \code{FUN},
+#' and then discarded, allowing large files to be processed incrementally
+#' without retaining all reads in memory at once.
+#'
+#' @inheritParams read_pod5
+#'
+#' @param file [character] A path to a POD5 file or an existing POD5 reader object.
+#' Character paths are opened internally and automatically closed when the
+#' function exits, including when \code{FUN} raises an error. Existing reader
+#' objects are used directly and are not closed by this function.
+#' @param FUN is the R function to run on each group. Receives one metadata
+#' data frame, or one named list when signal is TRUE. Additional arguments are
+#' passed through \code{...}
+#' @param part_size [numeric] A positive whole number giving the maximum number of reads
+#' processed in each group. The final group may contain fewer reads. Defaults to \code{1000}.
+#' @param signal [logical] whether signal data should be read for each group.
+#' If \code{FALSE}, only read metadata are obtained. If \code{TRUE}, signal
+#' vectors are included in the object passed to \code{FUN}. Defaults to \code{FALSE}.
+#' @param calibrated [logical] whether signal values should be returned as
+#' calibrated values rather than raw ADC counts. This argument is only
+#' relevant when \code{signal = TRUE}. Defaults to \code{FALSE}.
+#' @param verbose Logical; whether progress messages should be printed at the
+#'   start and end of processing. Defaults to \code{TRUE}.
+#' @param ... Additional arguments passed to FUN.
+#'
+#' @returns Invisibly returns the number of processed reads. Callback results are
+#' not retained. Callback errors propagate after closing internally opened files.
+#' @export
+#'
+#' @examples
+process_pod5 <- function(file,
+                         FUN,
+                         part_size = 1000,
+                         signal = FALSE,
+                         calibrated = FALSE,
+                         verbose = TRUE,
+                         ...) {
+  #assertions
+  if (missing(file)) {
+    stop("File is missing. Please provide a valid file argument.", call. = FALSE)
+  }
+  if (missing(FUN)) {
+    stop("FUN is missing. Please provide a valid FUN argument.", call. = FALSE)
+  }
+  assert_condition(is.function(FUN), "FUN must be a function.")
+  .check_number(part_size, "Part_size", 1)
+  assert_condition(is.logical(verbose) && length(verbose) == 1L && !is.na(verbose),
+                   "Verbose must be TRUE or FALSE.")
+  assert_condition(is.logical(signal) && length(signal) == 1L && !is.na(signal),
+                   "Signal must be TRUE or FALSE.")
+  assert_condition(is.logical(calibrated) && length(calibrated) == 1L && !is.na(calibrated),
+                   "Calibrated must be TRUE or FALSE.")
+  reader <- file
+  if (is.character(file)) {
+    reader <- pod5R::open_pod5(file)
+    on.exit(pod5R::close_pod5(reader), add = TRUE)
+  }
+  num_reads <- pod5R::read_pod5_info(reader)$num_reads
+  if (verbose) {
+    cat(paste0('[', as.character(Sys.time()), '] ', 'Processing POD5 reads...', '\n'))
+  }
+  first_read <- 1
+  while (first_read <= num_reads) {
+    out <- pod5R::read_pod5(reader, first_read = first_read, num_reads = part_size,
+                            signal = signal, calibrated = calibrated)
+    FUN(out, ...)
+    first_read <- first_read + part_size
+  }
+  # Done comm
+  if (verbose) {
+    cat(paste0('[', as.character(Sys.time()), '] ', 'Done!', '\n'))
+  }
+  return(invisible(num_reads))
+}
 
 
 
