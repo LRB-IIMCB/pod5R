@@ -409,6 +409,11 @@ extract_pod5_signal <- function(file,
 #' @export
 #'
 #' @examples
+#' \dontrun{
+#' pod5R::process_pod5("reads.pod5", function(reads) {
+#' print(sum(reads$num_samples))
+#' }, part_size = 1000)
+#' }
 process_pod5 <- function(file,
                          FUN,
                          part_size = 1000,

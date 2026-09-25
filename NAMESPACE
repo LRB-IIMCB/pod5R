@@ -2,7 +2,9 @@
 
 export(close_pod5)
 export(extract_pod5_signal)
+export(extract_pod5_signal_dorado)
 export(open_pod5)
+export(process_pod5)
 export(read_pod5)
 export(read_pod5_ids)
 export(read_pod5_info)
