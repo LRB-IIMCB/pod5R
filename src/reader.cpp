@@ -190,169 +190,168 @@ namespace {
 // requires 2 coordinates: 'batch' - which read batch contains the read
 // and 'row' inside batch to visit for finding given read
 struct Location { size_t batch; size_t row; size_t output; };
-// R dataframes use integer-style row names so the single returned dataframe
-// can have at most 'INT_MAX' rows; so big POD5 need to be processed incrementally
-void check_read_count(size_t count) {
-  if (count > INT_MAX) stop("Too many reads for one data frame. Use process_pod5().");
-}
-// convert floating point from pod5 to R numeric
-double metadata_number(float value) {
-  // represent IEEE NaN missing values
-  return std::isnan(value) ? NA_REAL : static_cast<double>(value);
-}
-// Determine which row should be returned (ID based or positional)
-std::vector<Location> select_rows(Reader& r, Nullable<CharacterVector> selection,
-                                  double first, double limit) {
-  std::vector<Location> result;
-  // Explicid IDs supplied
-  if (selection.isNotNull()) {
-    CharacterVector ids(selection);
-    check_read_count(ids.size());
-    std::vector<uint8_t> bytes(ids.size() * 16);
-    std::unordered_map<std::string, size_t> order;
-    for (R_xlen_t i = 0; i < ids.size(); ++i) {
-      if (CharacterVector::is_na(ids[i])) stop("Read IDs must not be missing.");
-      std::string id = as<std::string>(ids[i]);
-      // Exactly this pattern xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-      if (id.size() != 36) stop("Invalid read UUID.");
-      for (size_t k = 0; k < id.size(); ++k) {
-        // hyphens at exact positions
-        bool dash =
-          k == 8 ||
-          k == 13 ||
-          k == 18 ||
-          k == 23;
-        if (dash ? id[k] != '-' : !std::isxdigit(static_cast<unsigned char>(id[k])))
-          stop("Invalid read UUID.");
-        id[k] = static_cast<char>(std::tolower(static_cast<unsigned char>(id[k])));
-      }
-      if (order.count(id)) stop("Duplicate read UUID."); // TODO: figure out split reads!!!
-      order[id] = i;
-      size_t j = 0;
-      for (size_t k = 0; k < id.size();) {
-        if (id[k] == '-') { ++k; continue; }
-        bytes[i * 16 + j++] = static_cast<uint8_t>(std::stoul(id.substr(k, 2), nullptr, 16));
-        k += 2;
-      }
-    }
-    std::vector<uint32_t> counts(r.offsets.size() - 1), rows(ids.size());
-    size_t found = 0;
-    if (ids.size()) check(pod5_plan_traversal(r.file, bytes.data(), ids.size(), counts.data(),
-                 rows.data(), &found)); // Output: total number of located reads
-    // Require every requested UUID to exist
-    if (found != static_cast<size_t>(ids.size()))
-      stop("Some requested read IDs were not found in this POD5 file.");
-    // track the next entry to consume from that row array
-    size_t cursor = 0;
-    // Visit each batch that contains one or more requested reads
-    for (size_t b = 0; b < counts.size(); ++b) {
-      if (!counts[b]) continue;
-      // Get the POD5 batch
-      Pod5ReadRecordBatch_t* raw = nullptr;
-      check(pod5_get_read_batch(&raw, r.file, b));
-      // Transfer to the RAII wrapper
-      Batch batch(raw, pod5_free_read_batch);
-      // Process every requested row found inside this batch
-      for (size_t j = 0; j < counts[b]; ++j) {
-        size_t row = rows[cursor++];
-        // POD5 metadata for this read
-        ReadBatchRowInfo_t info{}; uint16_t version; // report version
-        check(pod5_get_read_batch_row_info_data(batch.get(), row, READ_BATCH_ROW_INFO_VERSION,
-                                                &info, &version));
-        result.push_back({b, row, order.at(uuid(info.read_id))});
-      }
-    }
-  // Positional range-based read selection
-  } else {
-    size_t total = r.offsets.back(); //cumulative row count after the final batch
-    // Clamp `first` to the total number of reads
-    size_t begin = static_cast<size_t>(std::min(first, static_cast<double>(total)));
-    // Determine how many rows can be returned
-    size_t count = static_cast<size_t>(std::min(limit, static_cast<double>(total - begin)));
-    // Check if the result can fit in a single R data frame
-    check_read_count(count);
-    result.reserve(count);
-    // `upper_bound` finds the first boundary greater than `begin`
-    auto upper = std::upper_bound(r.offsets.begin(),
-                                  r.offsets.end(),
-                                  begin
-                                  );
-    // Convert the iterator position into the batch index
-    size_t b = static_cast<size_t>(upper - r.offsets.begin() - 1);
-    // Generate one Location entry for every selected global read
-    for (size_t i = 0; i < count; ++i) {
-      while (begin + i >= r.offsets[b + 1]) ++b;
-      result.push_back({b, begin + i - r.offsets[b], i});
-    }
+  // R dataframes use integer-style row names so the single returned dataframe
+  // can have at most 'INT_MAX' rows; so big POD5 need to be processed incrementally
+  void check_read_count(size_t count) {
+    if (count > INT_MAX) stop("Too many reads for one data frame. Use process_pod5().");
   }
-  return result;
-}
+  // convert floating point from pod5 to R numeric
+  double metadata_number(float value) {
+    // represent IEEE NaN missing values
+    return std::isnan(value) ? NA_REAL : static_cast<double>(value);
+  }
+  // Determine which row should be returned (ID based or positional)
+  std::vector<Location> select_rows(Reader& r, Nullable<CharacterVector> selection,
+                                    double first, double limit) {
+    std::vector<Location> result;
+    // Explicid IDs supplied
+    if (selection.isNotNull()) {
+      CharacterVector ids(selection);
+      check_read_count(ids.size());
+      std::vector<uint8_t> bytes(ids.size() * 16);
+      std::unordered_map<std::string, size_t> order;
+      for (R_xlen_t i = 0; i < ids.size(); ++i) {
+        if (CharacterVector::is_na(ids[i])) stop("Read IDs must not be missing.");
+        std::string id = as<std::string>(ids[i]);
+        // Exactly this pattern xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        if (id.size() != 36) stop("Invalid read UUID.");
+        for (size_t k = 0; k < id.size(); ++k) {
+          // hyphens at exact positions
+          bool dash =
+            k == 8 ||
+            k == 13 ||
+            k == 18 ||
+            k == 23;
+          if (dash ? id[k] != '-' : !std::isxdigit(static_cast<unsigned char>(id[k])))
+            stop("Invalid read UUID.");
+          id[k] = static_cast<char>(std::tolower(static_cast<unsigned char>(id[k])));
+        }
+        if (order.count(id)) stop("Duplicate read UUID."); // TODO: figure out split reads!!!
+        order[id] = i;
+        size_t j = 0;
+        for (size_t k = 0; k < id.size();) {
+          if (id[k] == '-') { ++k; continue; }
+          bytes[i * 16 + j++] = static_cast<uint8_t>(std::stoul(id.substr(k, 2), nullptr, 16));
+          k += 2;
+        }
+      }
+      std::vector<uint32_t> counts(r.offsets.size() - 1), rows(ids.size());
+      size_t found = 0;
+      if (ids.size()) check(pod5_plan_traversal(r.file, bytes.data(), ids.size(), counts.data(),
+                   rows.data(), &found)); // Output: total number of located reads
+      // Require every requested UUID to exist
+      if (found != static_cast<size_t>(ids.size()))
+        stop("Some requested read IDs were not found in this POD5 file.");
+      // track the next entry to consume from that row array
+      size_t cursor = 0;
+      // Visit each batch that contains one or more requested reads
+      for (size_t b = 0; b < counts.size(); ++b) {
+        if (!counts[b]) continue;
+        // Get the POD5 batch
+        Pod5ReadRecordBatch_t* raw = nullptr;
+        check(pod5_get_read_batch(&raw, r.file, b));
+        // Transfer to the RAII wrapper
+        Batch batch(raw, pod5_free_read_batch);
+        // Process every requested row found inside this batch
+        for (size_t j = 0; j < counts[b]; ++j) {
+          size_t row = rows[cursor++];
+          // POD5 metadata for this read
+          ReadBatchRowInfo_t info{}; uint16_t version; // report version
+          check(pod5_get_read_batch_row_info_data(batch.get(), row, READ_BATCH_ROW_INFO_VERSION,
+                                                  &info, &version));
+          result.push_back({b, row, order.at(uuid(info.read_id))});
+        }
+      }
+      // Positional range-based read selection
+    } else {
+      size_t total = r.offsets.back(); //cumulative row count after the final batch
+      // Clamp `first` to the total number of reads
+      size_t begin = static_cast<size_t>(std::min(first, static_cast<double>(total)));
+      // Determine how many rows can be returned
+      size_t count = static_cast<size_t>(std::min(limit, static_cast<double>(total - begin)));
+      // Check if the result can fit in a single R data frame
+      check_read_count(count);
+      result.reserve(count);
+      // `upper_bound` finds the first boundary greater than `begin`
+      auto upper = std::upper_bound(r.offsets.begin(),
+                                    r.offsets.end(),
+                                    begin
+      );
+      // Convert the iterator position into the batch index
+      size_t b = static_cast<size_t>(upper - r.offsets.begin() - 1);
+      // Generate one Location entry for every selected global read
+      for (size_t i = 0; i < count; ++i) {
+        while (begin + i >= r.offsets[b + 1]) ++b;
+        result.push_back({b, begin + i - r.offsets[b], i});
+      }
+    }
+    return result;
+  }
 
 
-// Extract a requested portion of the signal for one POD5 read
-// Signals are divided into independently stored signal chunks.
-// 1. Determine which sample slice is requested.
-// 2. Obtain signal chunks associated with the read.
-// 3. Convert chunks overlapping the requested slice.
-// 4. Copy required samples into R vector.
-SEXP signal_slice(Reader& r, Pod5ReadRecordBatch_t* batch, size_t row,
-                  const ReadBatchRowInfo_t& info, bool calibrated, double start, double end) {
-  // represent POD5 uint64_t values as R-compatible doubles
-  uint64_t begin = static_cast<uint64_t>(std::min(start, exact(info.num_samples)));
-  uint64_t finish = static_cast<uint64_t>(std::min(end, exact(info.num_samples)));
-  // Length of requested interval
-  size_t length = finish > begin ? finish - begin : 0;
-  if (length > static_cast<size_t>(R_XLEN_T_MAX)) stop("Signal is too long for an R vector.");
-  // Raw signal values are integral ADC measurements -> IntegerVector
-  // Calibrated values are floating-point physical signal values -> NumericVector
-  RObject output = calibrated ? RObject(NumericVector(length)) : RObject(IntegerVector(length));
-  if (!length) return output;
-  std::vector<uint64_t> indices(info.signal_row_count);
-  // Get the signal-row indices associated with this particular read
-  check(pod5_get_signal_row_indices(batch, row, info.signal_row_count, indices.data()));
-  std::vector<SignalRowInfo_t*> chunks(indices.size(), nullptr);
-  // Get metadata for all relevant signal chunks
-  check(pod5_get_signal_row_info(r.file, indices.size(), indices.data(), chunks.data()));
-  // Ensure that cleanup happens automatically even in case of error
-  struct Guard {
-    std::vector<SignalRowInfo_t*>& chunks;
-    ~Guard() { pod5_free_signal_row_info(chunks.size(), chunks.data()); }
-  } guard{chunks};
-  uint64_t position = 0;
-  // sequentially process chunks
-  for (auto chunk : chunks) {
-    checkUserInterrupt();
-    uint64_t next = position + chunk->stored_sample_count;
-    // Decode chunk only if its interval overlaps requested slice
-    if (next > begin && position < finish) {
-      // Allocate temporary storage for the fully decoded raw signal chunk
-      std::vector<int16_t> values(chunk->stored_sample_count);
-      // Decode/decompress sig chunk into `values`
-      check(pod5_get_signal(r.file, chunk, values.size(), values.data()));
-      uint64_t lo = std::max(position, begin), hi = std::min(next, finish);
-      // Copy overlapping samples to R output vector
-      for (uint64_t i = lo; i < hi; ++i) {
-        int value = values[i - position];
-        if (calibrated) REAL(output)[i - begin] = (value +
-            static_cast<double>(info.calibration_offset)) * info.calibration_scale;
-        else INTEGER(output)[i - begin] = value;
+  // Extract a requested portion of the signal for one POD5 read
+  // Signals are divided into independently stored signal chunks.
+  // 1. Determine which sample slice is requested.
+  // 2. Obtain signal chunks associated with the read.
+  // 3. Convert chunks overlapping the requested slice.
+  // 4. Copy required samples into R vector.
+  SEXP signal_slice(Reader& r, Pod5ReadRecordBatch_t* batch, size_t row,
+                    const ReadBatchRowInfo_t& info, bool calibrated, double start, double end) {
+    // represent POD5 uint64_t values as R-compatible doubles
+    uint64_t begin = static_cast<uint64_t>(std::min(start, exact(info.num_samples)));
+    uint64_t finish = static_cast<uint64_t>(std::min(end, exact(info.num_samples)));
+    // Length of requested interval
+    size_t length = finish > begin ? finish - begin : 0;
+    if (length > static_cast<size_t>(R_XLEN_T_MAX)) stop("Signal is too long for an R vector.");
+    // Raw signal values are integral ADC measurements -> IntegerVector
+    // Calibrated values are floating-point physical signal values -> NumericVector
+    RObject output = calibrated ? RObject(NumericVector(length)) : RObject(IntegerVector(length));
+    if (!length) return output;
+    std::vector<uint64_t> indices(info.signal_row_count);
+    // Get the signal-row indices associated with this particular read
+    check(pod5_get_signal_row_indices(batch, row, info.signal_row_count, indices.data()));
+    std::vector<SignalRowInfo_t*> chunks(indices.size(), nullptr);
+    // Get metadata for all relevant signal chunks
+    check(pod5_get_signal_row_info(r.file, indices.size(), indices.data(), chunks.data()));
+    // Ensure that cleanup happens automatically even in case of error
+    struct Guard {
+      std::vector<SignalRowInfo_t*>& chunks;
+      ~Guard() { pod5_free_signal_row_info(chunks.size(), chunks.data()); }
+    } guard{chunks};
+    uint64_t position = 0;
+    // sequentially process chunks
+    for (auto chunk : chunks) {
+      checkUserInterrupt();
+      uint64_t next = position + chunk->stored_sample_count;
+      // Decode chunk only if its interval overlaps requested slice
+      if (next > begin && position < finish) {
+        // Allocate temporary storage for the fully decoded raw signal chunk
+        std::vector<int16_t> values(chunk->stored_sample_count);
+        // Decode/decompress sig chunk into `values`
+        check(pod5_get_signal(r.file, chunk, values.size(), values.data()));
+        uint64_t lo = std::max(position, begin), hi = std::min(next, finish);
+        // Copy overlapping samples to R output vector
+        for (uint64_t i = lo; i < hi; ++i) {
+          int value = values[i - position];
+          if (calibrated) REAL(output)[i - begin] = (value +
+              static_cast<double>(info.calibration_offset)) * info.calibration_scale;
+          else INTEGER(output)[i - begin] = value;
+        }
       }
+      position = next;
+      if (position >= finish) break;
     }
-    position = next;
-    if (position >= finish) break;
+    if (position < finish) stop("POD5 signal chunks do not cover the declared sample count.");
+    return output;
   }
-  if (position < finish) stop("POD5 signal chunks do not cover the declared sample count.");
-  return output;
-}
 }
 
 // Read metadata and signals from selected POD5 reads
 
-// [[Rcpp::export]]
 // return an R list containing:
 // reads  -> dataframe with per-read metadata
 // signal -> named list of signal vectors
-
+// [[Rcpp::export]]
 List cpp_reads_pod5(
     SEXP pointer,
     Nullable<CharacterVector> ids,
