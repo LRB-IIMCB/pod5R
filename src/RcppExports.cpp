@@ -65,7 +65,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // cpp_reads_pod5
-// return an R list containing: // reads  -> dataframe with per-read metadata // signal -> named list of signal vectors  List cpp_reads_pod5(SEXP pointer, Nullable<CharacterVector> ids, double first, double limit, bool signal, bool calibrated, double start, double end);
+List cpp_reads_pod5(SEXP pointer, Nullable<CharacterVector> ids, double first, double limit, bool signal, bool calibrated, double start, double end);
 RcppExport SEXP _pod5R_cpp_reads_pod5(SEXP pointerSEXP, SEXP idsSEXP, SEXP firstSEXP, SEXP limitSEXP, SEXP signalSEXP, SEXP calibratedSEXP, SEXP startSEXP, SEXP endSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

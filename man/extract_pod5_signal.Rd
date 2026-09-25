@@ -15,13 +15,13 @@ extract_pod5_signal(
 \arguments{
 \item{file}{\link{character} or external pointer: POD5 path or open native reader}
 
-\item{read_ids}{Character \link{NULL}. Unique read UUIDs. NULL selects by row range.}
+\item{read_ids}{\link{character} (default: \code{NULL}). Unique read UUIDs. NULL selects by row range.}
 
-\item{calibrated}{Logical \link{FALSE}. Return signal in picoampers instead of ADC counts.}
+\item{calibrated}{\link{logical} (default: \code{FALSE}). Return signal in picoampers instead of ADC counts.}
 
-\item{start_sample}{Numeric \link{1}. First signal sample, one-based and inclusive.}
+\item{start_sample}{\link{numeric} (default: \code{1}). First signal sample, one-based and inclusive.}
 
-\item{end_sample}{Numeric \link{Inf}. Last signal sample, one-based and inclusive.}
+\item{end_sample}{\link{numeric} (default: \code{Inf}). Last signal sample, one-based and inclusive.}
 }
 \value{
 list of signal vectors named by read UUID in requested order.

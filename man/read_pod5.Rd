@@ -18,22 +18,26 @@ read_pod5(
 \arguments{
 \item{file}{\link{character} or external pointer: POD5 path or open native reader}
 
-\item{read_ids}{Character \link{NULL}. Unique read UUIDs. NULL selects by row range.}
+\item{read_ids}{\link{character} (default: \code{NULL}). Unique read UUIDs. NULL selects by row range.}
 
-\item{signal}{Logical \link{FALSE}. Include signal vectors in the returned list.}
+\item{signal}{\link{logical} (default: \code{FALSE}). Include signal vectors in the returned list.}
 
-\item{calibrated}{Logical \link{FALSE}. Return signal in picoampers instead of ADC counts.}
+\item{calibrated}{\link{logical} (default: \code{FALSE}). Return signal in picoampers instead of ADC counts.}
 
-\item{start_sample}{Numeric \link{1}. First signal sample, one-based and inclusive.}
+\item{start_sample}{\link{numeric} (default: \code{1}). First signal sample, one-based and inclusive.}
 
-\item{end_sample}{Numeric \link{Inf}. Last signal sample, one-based and inclusive.}
+\item{end_sample}{\link{numeric} (default: \code{Inf}). Last signal sample, one-based and inclusive.}
 
-\item{first_read}{Numeric \link{1}. First read in file order, one-based.}
+\item{first_read}{\link{numeric} (default: \code{1}). First read in file order, one-based.}
 
-\item{num_reads}{Numeric \link{Inf}. Maximum number of reads. Cannot be combined
+\item{num_reads}{\link{numeric} (default: \code{Inf}). Maximum number of reads. Cannot be combined
 with read_ids unless first_read and num_reads retain their defaults.}
 }
 \value{
+If signal is FALSE, a plain metadata data frame. Otherwise, a named
+list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
+Raw signals are integer vectors. Calibrated signals are numeric vectors.
+
 If signal is FALSE, a plain metadata data frame. Otherwise, a named
 list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
 Raw signals are integer vectors. Calibrated signals are numeric vectors.
