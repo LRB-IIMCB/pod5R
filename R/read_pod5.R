@@ -275,17 +275,23 @@ read_pod5_runs <- function(file) {
 #'
 #' @inheritParams read_pod5_info
 #'
-#' @param read_ids Character [NULL]. Unique read UUIDs. NULL selects by row range.
-#' @param signal Logical [FALSE]. Include signal vectors in the returned list.
-#' @param calibrated Logical [FALSE]. Return signal in picoampers instead of ADC counts.
-#' @param start_sample Numeric [1]. First signal sample, one-based and inclusive.
-#' @param end_sample Numeric [Inf]. Last signal sample, one-based and inclusive.
-#' @param first_read Numeric [1]. First read in file order, one-based.
-#' @param num_reads Numeric [Inf]. Maximum number of reads. Cannot be combined
+#' @param read_ids [character] (default: \code{NULL}). Unique read UUIDs. NULL selects by row range.
+#' @param signal [logical] (default: \code{FALSE}). Include signal vectors in the returned list.
+#' @param calibrated [logical] (default: \code{FALSE}). Return signal in picoampers instead of ADC counts.
+#' @param start_sample [numeric] (default: \code{1}). First signal sample, one-based and inclusive.
+#' @param end_sample [numeric] (default: \code{Inf}). Last signal sample, one-based and inclusive.
+#' @param first_read [numeric] (default: \code{1}). First read in file order, one-based.
+#' @param num_reads [numeric] (default: \code{Inf}). Maximum number of reads. Cannot be combined
 #' with read_ids unless first_read and num_reads retain their defaults.
+#'
 #' @returns If signal is FALSE, a plain metadata data frame. Otherwise, a named
 #' list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
 #' Raw signals are integer vectors. Calibrated signals are numeric vectors.
+#'
+#' @returns If signal is FALSE, a plain metadata data frame. Otherwise, a named
+#' list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
+#' Raw signals are integer vectors. Calibrated signals are numeric vectors.
+#'
 #' @seealso \code{\link{extract_pod5_signal}}
 #' @export
 #' @examples
