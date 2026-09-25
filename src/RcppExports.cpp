@@ -64,6 +64,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cpp_reads_pod5
+// return an R list containing: // reads  -> dataframe with per-read metadata // signal -> named list of signal vectors  List cpp_reads_pod5(SEXP pointer, Nullable<CharacterVector> ids, double first, double limit, bool signal, bool calibrated, double start, double end);
+RcppExport SEXP _pod5R_cpp_reads_pod5(SEXP pointerSEXP, SEXP idsSEXP, SEXP firstSEXP, SEXP limitSEXP, SEXP signalSEXP, SEXP calibratedSEXP, SEXP startSEXP, SEXP endSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type pointer(pointerSEXP);
+    Rcpp::traits::input_parameter< Nullable<CharacterVector> >::type ids(idsSEXP);
+    Rcpp::traits::input_parameter< double >::type first(firstSEXP);
+    Rcpp::traits::input_parameter< double >::type limit(limitSEXP);
+    Rcpp::traits::input_parameter< bool >::type signal(signalSEXP);
+    Rcpp::traits::input_parameter< bool >::type calibrated(calibratedSEXP);
+    Rcpp::traits::input_parameter< double >::type start(startSEXP);
+    Rcpp::traits::input_parameter< double >::type end(endSEXP);
+    rcpp_result_gen = Rcpp::wrap(cpp_reads_pod5(pointer, ids, first, limit, signal, calibrated, start, end));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_pod5R_cpp_open_pod5", (DL_FUNC) &_pod5R_cpp_open_pod5, 1},
@@ -71,6 +89,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_pod5R_cpp_info_pod5", (DL_FUNC) &_pod5R_cpp_info_pod5, 1},
     {"_pod5R_cpp_ids_pod5", (DL_FUNC) &_pod5R_cpp_ids_pod5, 1},
     {"_pod5R_cpp_runs_pod5", (DL_FUNC) &_pod5R_cpp_runs_pod5, 1},
+    {"_pod5R_cpp_reads_pod5", (DL_FUNC) &_pod5R_cpp_reads_pod5, 8},
     {NULL, NULL, 0}
 };
 

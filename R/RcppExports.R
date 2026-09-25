@@ -21,3 +21,7 @@ cpp_runs_pod5 <- function(pointer) {
     .Call(`_pod5R_cpp_runs_pod5`, pointer)
 }
 
+cpp_reads_pod5 <- function(pointer, ids, first, limit, signal, calibrated, start, end) {
+    .Call(`_pod5R_cpp_reads_pod5`, pointer, ids, first, limit, signal, calibrated, start, end)
+}
+

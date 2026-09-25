@@ -250,5 +250,134 @@ read_pod5_runs <- function(file) {
 
 
 
+#' Read POD5 metadata and signals (optionally)
+#'
+#' Captures read metadata with raw or calibrated signal (if requested), using native
+#' indexed selection for given read ids (UUIDs).
+#'
+#' Read identifiers are returned in requested order. Missing identifiers
+#' and duplicate selections throw errors. Without identifiers, reads follow file
+#' order. Metadata access alone never decompresses signal data. Sample intervals
+#' use R coordinates: one-based and inclusive. Bounds beyond a read are clipped;
+#' a start beyond the read yields an empty vector. Only overlapping compressed
+#' chunks are decoded. Universal interval applies to all selected reads.
+#' When a file contains repeated UUIDs, indexed selection returns one occurrence
+#' chosen by the native library. Use row ranges or \code{process_pod5()} to get
+#' every occurrence.
+#'
+#' Read \code{start_sample} 'retains its original zero-based acquisition coordinate.
+#'Signal orientation remains acquisition order. Calibration is
+#'\code{(raw_signal + calibration_offset) * calibration_scale} in picoamperes.
+#'
+#'Output memory grows with selected reads and samples. Use \code{process_pod5()}
+#'for bounded read groups. Native file mapping and the POD5 chunk cache also
+#'consume memory. Opening a reader caches batch boundaries, not signal vectors.
+#'
+#' @inheritParams read_pod5_info
+#'
+#' @param read_ids Character [NULL]. Unique read UUIDs. NULL selects by row range.
+#' @param signal Logical [FALSE]. Include signal vectors in the returned list.
+#' @param calibrated Logical [FALSE]. Return signal in picoampers instead of ADC counts.
+#' @param start_sample Numeric [1]. First signal sample, one-based and inclusive.
+#' @param end_sample Numeric [Inf]. Last signal sample, one-based and inclusive.
+#' @param first_read Numeric [1]. First read in file order, one-based.
+#' @param num_reads Numeric [Inf]. Maximum number of reads. Cannot be combined
+#' with read_ids unless first_read and num_reads retain their defaults.
+#' @returns If signal is FALSE, a plain metadata data frame. Otherwise, a named
+#' list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
+#' Raw signals are integer vectors. Calibrated signals are numeric vectors.
+#' @seealso \code{\link{extract_pod5_signal}}
+#' @export
+#' @examples
+#' \dontrun{
+#' reads <- pod5R::read_pod5("reads.pod5")
+#' out <- pod5R::read_pod5("reads.pod5", read_ids = reads$read_id[1:5],
+#' signal = TRUE, calibrated = TRUE)
+#' }
+read_pod5 <- function(file,
+                      read_ids = NULL,
+                      signal = FALSE,
+                      calibrated = FALSE,
+                      start_sample = 1,
+                      end_sample = Inf,
+                      first_read = 1,
+                      num_reads = Inf) {
+  #assertions
+  if (missing(file)) {
+    stop("File is missing. Please provide a valid file argument.", call. = FALSE)
+  }
+  read_ids <- .check_ids(read_ids)
+  assert_condition(is.logical(signal) && length(signal) == 1L && !is.na(signal),
+                   "Signal must be TRUE or FALSE.")
+  assert_condition(is.logical(calibrated) && length(calibrated) == 1L && !is.na(calibrated),
+                   "Calibrated must be TRUE or FALSE.")
+  .check_number(start_sample, "Start_sample", 1)
+  .check_number(end_sample, "End_sample", 1, TRUE)
+  .check_number(first_read, "First_read", 1)
+  .check_number(num_reads, "Num_reads", 0, TRUE)
+  assert_condition(end_sample >= start_sample, "End_sample must be >= start_sample.")
+  assert_condition(is.null(read_ids) || (first_read == 1 && num_reads == Inf),
+                   "Read_ids cannot be combined with a read row range.")
+  reader <- file
+  if (is.character(file)) {
+    reader <- pod5R::open_pod5(file)
+    on.exit(pod5R::close_pod5(reader), add = TRUE)
+  }
+  out <- cpp_reads_pod5(reader, read_ids, first_read - 1, num_reads,
+                        signal, calibrated, start_sample - 1, end_sample)
+  if (!signal) {
+    out <- out[['reads']]
+  }
+  return(out)
+}
+
+
+
+#' Extract selected POD5 signal vectors
+#'
+#' This is a convenience wrapper around \code{\link{read_pod5}} that
+#' requests signal data and returns only the \code{signal} component of the
+#' result. Signals can be returned either as raw ADC counts or as
+#' calibrated current values.
+#'
+#' @inheritParams read_pod5
+#'
+#' @returns list of signal vectors named by read UUID in requested order.
+#' @seealso \code{\link{read_pod5}} for coordinate and calibration details.
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' read_ids <- pod5R::read_pod5_ids("reads.pod5")
+#' signals <- pod5R::extract_pod5_signal("reads.pod5", read_ids[1],
+#' start_sample = 101, end_sample = 500)
+#' }
+extract_pod5_signal <- function(file,
+                                read_ids = NULL,
+                                calibrated = FALSE,
+                                start_sample = 1,
+                                end_sample = Inf) {
+  #assertions
+  if (missing(file)) {
+    stop("File is missing. Please provide a valid file argument.", call. = FALSE)
+  }
+  out <- pod5R::read_pod5(file, read_ids = read_ids, signal = TRUE,
+                          calibrated = calibrated, start_sample = start_sample,
+                          end_sample = end_sample)
+  return(out[['signal']])
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
