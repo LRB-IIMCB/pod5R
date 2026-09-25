@@ -5,12 +5,13 @@
 ^\.Rhistory$
 ^\.RData$
 ^\.Rbuildignore$
-^\.local$ # config space
-^native$ # compiled binaries
-^validation$ #QC
+^\.local$
+^native$
+^validation$
 ^\.git$
 ^\.gitignore$
 ^\.Ruserdata$
-^src/Makevars$ # compilation flags for C must be excluded
-^src/.*\.(o|so|a)$ # so tarball would not bloat
+^src/Makevars$
+^src/.*\.(o|so|a)$
+^LICENSE$
 ^LICENSE\.md$
