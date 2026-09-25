@@ -34,21 +34,21 @@ testthat::test_that("DRS metadata and selection agree", {
 })
 
 testthat::test_that("DRS raw signal, calibration, and slicing agree", {
+  # Read the first read together with its complete raw signal
   full <- pod5R::read_pod5(file, num_reads = 1, signal = TRUE)
-  raw <- full$signal[[1]]
+  raw <- full$signal[[1]] # Extract the signal vector
   testthat::expect_type(raw, "integer")
+  # The number of decoded signal samples should agree exactly with the `num_samples`
   testthat::expect_length(raw, full$reads$num_samples[1])
   testthat::expect_gt(length(raw), 0)
-  current <- pod5R::read_pod5(
-    file, num_reads = 1, signal = TRUE, calibrated = TRUE
-  )$signal[[1]]
+  # native implementation should apply stored calibration parameters correctly
+  current <- pod5R::read_pod5(file, num_reads = 1, signal = TRUE, calibrated = TRUE)$signal[[1]]
   expected <- (raw + full$reads$calibration_offset[1]) *
     full$reads$calibration_scale[1]
   testthat::expect_equal(current, expected, tolerance = 1e-12)
   last <- min(100, length(raw))
-  slice <- pod5R::read_pod5(
-    file, num_reads = 1, signal = TRUE, end_sample = last
-  )$signal[[1]]
+  # should return the leading portion of the signal
+  slice <- pod5R::read_pod5(file, num_reads = 1, signal = TRUE, end_sample = last)$signal[[1]]
   testthat::expect_identical(slice, raw[seq_len(last)])
 })
 
@@ -56,6 +56,7 @@ testthat::test_that("DRS raw signal, calibration, and slicing agree", {
 testthat::test_that("DRS grouped processing preserves all read IDs", {
   ids <- pod5R::read_pod5_ids(file)
   seen <- character()
+  # should traverse the entire file sequentially avoiding keeping all reads in memory
   count <- pod5R::process_pod5(file, function(reads) {
     seen <<- c(seen, reads$read_id)
   }, part_size = 10, verbose = FALSE)
