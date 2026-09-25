@@ -266,12 +266,16 @@ read_pod5_runs <- function(file) {
 #' every occurrence.
 #'
 #' Read \code{start_sample} 'retains its original zero-based acquisition coordinate.
-#'Signal orientation remains acquisition order. Calibration is
+#' Signal orientation remains acquisition order. Calibration is
 #'\code{(raw_signal + calibration_offset) * calibration_scale} in picoamperes.
 #'
-#'Output memory grows with selected reads and samples. Use \code{process_pod5()}
-#'for bounded read groups. Native file mapping and the POD5 chunk cache also
-#'consume memory. Opening a reader caches batch boundaries, not signal vectors.
+#' Output memory grows with selected reads and samples. Use \code{process_pod5()}
+#' for bounded read groups. Native file mapping and the POD5 chunk cache also
+#' consume memory. Opening a reader caches batch boundaries, not signal vectors.
+#'
+#' Dorado split children have new UUIDs that are not stored in original POD5 file.
+#' Use \code{extract_pod5_signal_dorado()} with parent and sample tags from Dorado
+#' SAM/BAM to extract their signal intervals.
 #'
 #' @inheritParams read_pod5_info
 #'
