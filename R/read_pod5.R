@@ -60,7 +60,7 @@ assert_condition <- function(cond, msg = "Assertion failed") {
 #' @keywords internal
 .check_ids <- function(read_ids){
   if (!is.null(read_ids)){
-    asseet_condition(is.character(read_ids) && !anyNA(read_ids),
+    assert_condition(is.character(read_ids) && !anyNA(read_ids),
                      "Read_ids must be a character vec without missing values")
     assert_condition(all(grepl("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", read_ids)),
                      "Read ids must be a valid UUID strings")
