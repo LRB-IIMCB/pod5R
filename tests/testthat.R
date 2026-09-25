@@ -9,4 +9,4 @@
 library(testthat)
 library(pod5R)
 
-test_check("pod5R")
+testthat::test_check("pod5R")
