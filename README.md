@@ -3,9 +3,24 @@
 
 # pod5R
 
-**An R interface to pod5 file format by Oxford Nanopore Technologies**
+**An R interface to POD5 file format by Oxford Nanopore Technologies**
 
 ## Introduction
+
+**pod5R** reads POD5 files through Oxford Nanopore's native C API, using a small
+Rcpp interface. It returns ordinary R data frames, named lists, and signal vectors.
+Reading files does not require Python, reticulate, or the R Arrow package.
+
+The native implementation handles the Arrow-based file structure, compressed
+signals, indexed UUID lookup, and format migration. Reusing this implementation
+avoids maintaining a separate parser and decompressor entirely in R. The R layer
+provides argument validation, read selection, calibration, and signal extraction.
+
+The package provides read access. It does not write POD5 files or perform
+basecalling.
+
+The software is still under active development. All suggestions for improvement
+are welcome. Please note that the code may change frequently, so use it with caution.
 
 
 ## Troubleshooting

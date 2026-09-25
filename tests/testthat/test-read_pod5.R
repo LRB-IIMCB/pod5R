@@ -5,9 +5,9 @@ file <- system.file("extdata", "drs-filtered.pod5",
 
 # Calling `open_pod5()` without the `file` argument should fail with  error.
 testthat::test_that("invalid inputs and closed readers are rejected", {
-  testthat::expect_error(pod5R::open_pod5(), "File is missing")
+  testthat::expect_error(pod5R::open_pod5(), "POD5 file is missing")
   # A missing string value is not a valid file path.
-  testthat::expect_error(pod5R::open_pod5(NA_character_), "single non-empty")
+  testthat::expect_error(pod5R::open_pod5(NA_character_), "single, non-empty")
   reader <- pod5R::open_pod5(file)
   pod5R::close_pod5(reader)
   testthat::expect_error(pod5R::read_pod5_info(reader), "closed")
@@ -62,4 +62,120 @@ testthat::test_that("DRS grouped processing preserves all read IDs", {
   }, part_size = 10, verbose = FALSE)
   testthat::expect_identical(seen, ids)
   testthat::expect_equal(count, length(ids))
+})
+
+
+################################################################################
+# INPUT VALIDATION AND READER LIFETIME
+################################################################################
+
+testthat::test_that("paths are validated before filesystem access", {
+  invalid <- list(NULL, 1, TRUE, character(), NA_character_, "", c(file, file))
+  for (path in invalid) {
+    testthat::expect_error(pod5R::open_pod5(path), "single, non-empty")
+  }
+  testthat::expect_error(pod5R::open_pod5(tempdir()), "directory")
+  testthat::expect_error(pod5R::open_pod5(tempfile()), "does not exist")
+
+  corrupt_file <- tempfile(fileext = ".pod5")
+  on.exit(unlink(corrupt_file), add = TRUE)
+  writeLines("This is not a POD5 file", corrupt_file)
+  testthat::expect_error(pod5R::open_pod5(corrupt_file), "POD5:")
+})
+
+
+testthat::test_that("invalid and serialised readers cannot be used", {
+  testthat::expect_error(pod5R::close_pod5(1), "valid POD5 reader")
+  reader <- pod5R::open_pod5(file)
+  on.exit(pod5R::close_pod5(reader), add = TRUE)
+  restored <- unserialize(serialize(reader, NULL))
+  testthat::expect_error(pod5R::read_pod5_info(restored), "closed")
+  testthat::expect_gt(pod5R::read_pod5_info(reader)$num_reads, 0)
+})
+
+
+################################################################################
+# READ SELECTION AND SIGNAL BOUNDARIES
+################################################################################
+
+testthat::test_that("UUID validation and row ranges preserve selection semantics", {
+  ids <- pod5R::read_pod5_ids(file)
+  testthat::expect_error(pod5R::read_pod5(file, "invalid"), "UUID")
+  testthat::expect_error(pod5R::read_pod5(file, NA_character_), "without missing")
+  testthat::expect_error(pod5R::read_pod5(file, c(ids[1], toupper(ids[1]))), "unique")
+  testthat::expect_error(pod5R::read_pod5(file, ids[1], first_read = 2), "row range")
+  testthat::expect_error(pod5R::read_pod5(file, num_reads = -1), "Num_reads")
+  testthat::expect_error(pod5R::read_pod5(file, first_read = 1.5), "First_read")
+  testthat::expect_error(pod5R::read_pod5(file, signal = NA), "Signal")
+  testthat::expect_error(pod5R::read_pod5(file, calibrated = 1), "Calibrated")
+  testthat::expect_identical(pod5R::read_pod5(file, toupper(ids[2:1]))$read_id, ids[2:1])
+  testthat::expect_identical(
+    pod5R::read_pod5(file, first_read = 2, num_reads = 3)$read_id, ids[2:4]
+  )
+
+  for (selection in list(list(read_ids = character()), list(num_reads = 0),
+                         list(first_read = length(ids) + 1))) {
+    out <- do.call(pod5R::read_pod5, c(list(file = file, signal = TRUE), selection))
+    testthat::expect_s3_class(out$reads, "data.frame")
+    testthat::expect_equal(nrow(out$reads), 0)
+    testthat::expect_identical(out$signal, stats::setNames(list(), character()))
+  }
+})
+
+
+testthat::test_that("signal slices handle interior and out-of-range boundaries", {
+  full <- pod5R::read_pod5(file, num_reads = 1, signal = TRUE)
+  id <- full$reads$read_id[1]
+  raw <- full$signal[[1]]
+  testthat::expect_error(
+    pod5R::extract_pod5_signal(file, id, start_sample = 5, end_sample = 4), "End_sample"
+  )
+  testthat::expect_identical(
+    pod5R::extract_pod5_signal(file, id, start_sample = 2, end_sample = 20)[[1]], raw[2:20]
+  )
+  testthat::expect_identical(
+    pod5R::extract_pod5_signal(file, id, end_sample = length(raw) + 100)[[1]], raw
+  )
+  testthat::expect_identical(
+    pod5R::extract_pod5_signal(file, id, start_sample = length(raw) + 1)[[1]], integer()
+  )
+  testthat::expect_identical(
+    pod5R::extract_pod5_signal(file, id, calibrated = TRUE,
+                               start_sample = length(raw) + 1)[[1]], numeric()
+  )
+})
+
+
+################################################################################
+# GROUPED PROCESSING AND CALLBACK ERRORS
+################################################################################
+
+testthat::test_that("grouped signals and callback arguments are preserved", {
+  expected <- pod5R::read_pod5(file, signal = TRUE)
+  observed <- new.env(parent = emptyenv())
+  observed$ids <- character()
+  observed$signal <- list()
+  observed$sizes <- integer()
+
+  count <- pod5R::process_pod5(file, function(out, state) {
+    state$ids <- c(state$ids, out$reads$read_id)
+    state$signal <- c(state$signal, out$signal)
+    state$sizes <- c(state$sizes, nrow(out$reads))
+  }, state = observed, part_size = 10, signal = TRUE, verbose = FALSE)
+
+  testthat::expect_equal(count, nrow(expected$reads))
+  testthat::expect_identical(observed$ids, expected$reads$read_id)
+  testthat::expect_identical(observed$signal, expected$signal)
+  testthat::expect_true(all(observed$sizes <= 10))
+})
+
+
+testthat::test_that("callback failures preserve borrowed reader ownership", {
+  reader <- pod5R::open_pod5(file)
+  on.exit(pod5R::close_pod5(reader), add = TRUE)
+  fail <- function(reads) stop("callback failure")
+  testthat::expect_error(pod5R::process_pod5(reader, fail, verbose = FALSE), "callback failure")
+  testthat::expect_gt(pod5R::read_pod5_info(reader)$num_reads, 0)
+  testthat::expect_error(pod5R::process_pod5(file, fail, verbose = FALSE), "callback failure")
+  testthat::expect_gt(pod5R::read_pod5_info(file)$num_reads, 0)
 })

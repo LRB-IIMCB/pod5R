@@ -3,6 +3,11 @@
 # do not execute this file as child process!!!
 # shell must support conda activate
 
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+  echo "Source this file from Bash: source tools/activate.sh" >&2
+  exit 1
+fi
+
 if ! declare -F conda >/dev/null; then
   echo "Open bash shell where conda is initialized, then source this file.">&2
   return 1
@@ -23,7 +28,7 @@ export PIP_CACHE_DIR="$POD5R_PROJECT/.local/cache/pip"
 export TMPDIR="$POD5R_PROJECT/.local/tmp"
 export PYTHONNOUSERSITE=1
 export R_LIBS_USER="$POD5R_PROJECT/.local/r-library"
-export POD5_ROOT="$POD5_PROJECT/native"
+export POD5_ROOT="$POD5R_PROJECT/native"
 export CMAKE_BUILD_PARALLEL_LEVEL=2
 
 

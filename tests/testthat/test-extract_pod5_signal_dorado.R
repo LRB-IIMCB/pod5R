@@ -92,7 +92,7 @@ testthat::test_that("missing and inconsistent tags fail explicitly", {
   bad <- x$tags
   bad$read_id[2] <- bad$read_id[1]
   testthat::expect_error(
-    pod5R::extract_pod5_signal_dorado(x$file, bad), "duplicates"
+    pod5R::extract_pod5_signal_dorado(x$file, bad), "unique"
   )
   for (column in c("sp", "ts", "ns")) {
     for (value in c(NA_real_, Inf, -1, 0.5)) {
@@ -171,6 +171,16 @@ testthat::test_that("empty intervals and borrowed readers work", {
 })
 
 
+testthat::test_that("integer tag arithmetic does not overflow before range validation", {
+  x <- .make_drs_split_case()
+  bad <- x$tags[1, ]
+  bad$sp <- .Machine$integer.max
+  bad$ts <- 1L
+  bad$ns <- 2L
+  testthat::expect_error(
+    pod5R::extract_pod5_signal_dorado(x$file, bad), "exceeds the POD5 parent length"
+  )
+})
 
 
 

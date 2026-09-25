@@ -37,10 +37,6 @@ with read_ids unless first_read and num_reads retain their defaults.}
 If signal is FALSE, a plain metadata data frame. Otherwise, a named
 list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
 Raw signals are integer vectors. Calibrated signals are numeric vectors.
-
-If signal is FALSE, a plain metadata data frame. Otherwise, a named
-list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
-Raw signals are integer vectors. Calibrated signals are numeric vectors.
 }
 \description{
 Captures read metadata with raw or calibrated signal (if requested), using native
@@ -57,7 +53,7 @@ When a file contains repeated UUIDs, indexed selection returns one occurrence
 chosen by the native library. Use row ranges or \code{process_pod5()} to get
 every occurrence.
 
-Read \code{start_sample} 'retains its original zero-based acquisition coordinate.
+Read \code{start_sample} retains its original zero-based acquisition coordinate.
 Signal orientation remains acquisition order. Calibration is
 \code{(raw_signal + calibration_offset) * calibration_scale} in picoamperes.
 

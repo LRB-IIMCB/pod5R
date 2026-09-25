@@ -39,7 +39,7 @@ assert_condition <- function(cond, msg = "Assertion failed") {
 
   assert_condition(
     is.numeric(x) && length(x) == 1L &&
-    !is.na(x) && x >= minimum && ((is.finite(x) && x==floor(x) && x<=2^53-1) || (allow_infinite && x==Inf)),
+      !is.na(x) && x >= minimum && ((is.finite(x) && x==floor(x) && x<=2^53-1) || (allow_infinite && x==Inf)),
     paste0(name, " must be a whole number >= ", minimum, if (allow_infinite) "or Inf. " else "."))
 
   return(invisible(TRUE))
@@ -105,12 +105,11 @@ open_pod5 <- function(file){
     stop("POD5 file is missing. Please provide a valid file argument", call.=FALSE)
   }
 
-  assert_condition(file.exists(file) && !dir.exists(file),
-                   "File does not exist or is a directory")
-
   assert_condition(is.character(file) && length(file) ==1L && !is.na(file) && nzchar(file),
                    "File must be a single, non-empty path")
 
+  assert_condition(file.exists(file) && !dir.exists(file),
+                   "File does not exist or is a directory")
 
   outfile <- cpp_open_pod5(path.expand(file))
   return(outfile)
@@ -265,7 +264,7 @@ read_pod5_runs <- function(file) {
 #' chosen by the native library. Use row ranges or \code{process_pod5()} to get
 #' every occurrence.
 #'
-#' Read \code{start_sample} 'retains its original zero-based acquisition coordinate.
+#' Read \code{start_sample} retains its original zero-based acquisition coordinate.
 #' Signal orientation remains acquisition order. Calibration is
 #'\code{(raw_signal + calibration_offset) * calibration_scale} in picoamperes.
 #'
@@ -287,10 +286,6 @@ read_pod5_runs <- function(file) {
 #' @param first_read [numeric] (default: \code{1}). First read in file order, one-based.
 #' @param num_reads [numeric] (default: \code{Inf}). Maximum number of reads. Cannot be combined
 #' with read_ids unless first_read and num_reads retain their defaults.
-#'
-#' @returns If signal is FALSE, a plain metadata data frame. Otherwise, a named
-#' list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
-#' Raw signals are integer vectors. Calibrated signals are numeric vectors.
 #'
 #' @returns If signal is FALSE, a plain metadata data frame. Otherwise, a named
 #' list with \code{reads} (metadata) and \code{signal} (vectors named by UUID).
@@ -387,8 +382,6 @@ extract_pod5_signal <- function(file,
 #' and then discarded, allowing large files to be processed incrementally
 #' without retaining all reads in memory at once.
 #'
-#' @inheritParams read_pod5
-#'
 #' @param file [character] A path to a POD5 file or an existing POD5 reader object.
 #' Character paths are opened internally and automatically closed when the
 #' function exits, including when \code{FUN} raises an error. Existing reader
@@ -462,5 +455,3 @@ process_pod5 <- function(file,
   }
   return(invisible(num_reads))
 }
-
-
