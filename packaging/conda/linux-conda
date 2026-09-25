@@ -1,0 +1,8 @@
+include({{ os.environ["SRC_DIR"] }}/r-package/tools/native/linux-gcc13)
+
+[conf]
+tools.build:sysroot={{ os.environ["CONDA_BUILD_SYSROOT"] }}
+tools.build:cflags={{ (os.environ.get("CFLAGS", "") + " " + os.environ.get("CPPFLAGS", "")).split() }}
+tools.build:cxxflags={{ (os.environ.get("CXXFLAGS", "") + " " + os.environ.get("CPPFLAGS", "")).split() }}
+tools.build:exelinkflags={{ os.environ.get("LDFLAGS", "").split() }}
+tools.build:sharedlinkflags={{ os.environ.get("LDFLAGS", "").split() }}
