@@ -1,0 +1,75 @@
+{% set version = "0.1.0" %}
+
+package:
+  name: r-pod5r
+  version: {{ version }}
+
+source:
+  - url: "{{ environ['POD5R_SOURCE_URL'] }}"
+    sha256: c86b63e5d7037d5a90bbb78a810a3efe5356dd999d1378789eb058880c00b5ad
+    folder: r-package
+
+  - git_url: https://github.com/nanoporetech/pod5-file-format.git
+    git_rev: c0be43537f84d0e704ef7590dc9ec198bd67be7e
+    folder: pod5-format
+
+build:
+  number: 0
+  skip: true  # [not (linux and x86_64)]
+  script: bash "$RECIPE_DIR/build.sh"
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - {{ stdlib('c') }}
+    - python {{ python }}
+    - conan 2.32.0
+    - setuptools_scm 7.1.0
+    - cmake >=3.27,<4
+    - ninja
+    - make
+    - pkg-config
+    - git
+    - autoconf
+    - automake
+    - libtool
+    - perl
+    - patch
+    - patchelf
+
+  host:
+    - r-base {{ r_base }}
+    - r-rcpp
+
+  run:
+    - {{ pin_compatible('r-base', max_pin='x.x') }}
+    - r-rcpp
+
+test:
+  requires:
+    - r-testthat >=3.0.0
+
+  source_files:
+    - r-package/tests
+
+  commands:
+    - >-
+      Rscript --vanilla -e
+      "library(pod5R);
+      testthat::test_dir('r-package/tests/testthat',
+      stop_on_failure = TRUE)"
+
+about:
+  home: https://github.com/LRB-IIMCB/pod5R
+  license: GPL-3.0-or-later
+  license_family: GPL
+  license_file:
+    - LICENSE
+    - native-licenses/
+  summary: Native R interface to Oxford Nanopore POD5 files
+  description: |
+    Reads Oxford Nanopore POD5 files through the native POD5 C API.
+    Supports read and run metadata, indexed read selection,
+    calibrated signal extraction, and Dorado split-read mapping.
+  dev_url: https://github.com/LRB-IIMCB/pod5R
