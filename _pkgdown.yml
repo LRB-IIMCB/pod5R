@@ -1,0 +1,101 @@
+destination: .local/pkgdown-site
+
+template:
+  bootstrap: 5
+  bootswatch: yeti
+  bslib:
+    primary: "#449434"
+    link-color: "#2F6B24"
+    link-hover-color: "#24531B"
+  includes:
+    in_header: |
+      <style>
+      body, .contents, .contents p, .contents li,
+      .contents table, .contents th, .contents td {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                     "Helvetica Neue", Arial, sans-serif;
+        font-size: 1rem;
+        line-height: 1.5;
+      }
+
+      .contents table {
+        font-size: 0.95rem;
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 1rem;
+      }
+
+      .contents th, .contents td {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #dee2e6;
+        vertical-align: top;
+      }
+
+      .contents th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+      }
+      </style>
+
+home:
+  sidebar:
+    structure: [links, license, authors, dev]
+
+navbar:
+  bg: primary
+  type: dark
+  structure:
+    left: [reference, news]
+    right: [search, github]
+  components:
+    github:
+      icon: fab fa-github
+      href: https://github.com/LRB-IIMCB/pod5R
+      aria-label: GitHub
+
+reference:
+  - title: Package overview
+  - contents:
+      - pod5R-package
+
+  - title: File access
+    desc: >
+      Open and close POD5 readers and inspect file-level information.
+  - contents:
+      - open_pod5
+      - close_pod5
+      - read_pod5_info
+
+  - title: Reads and sequencing runs
+    desc: >
+      Retrieve read identifiers, read metadata, sequencing run information,
+      and optional signal data.
+  - contents:
+      - read_pod5_ids
+      - read_pod5
+      - read_pod5_runs
+
+  - title: Signal extraction
+    desc: >
+      Extract raw or calibrated signal and map Dorado split reads
+      to intervals in their parent POD5 signals.
+  - contents:
+      - extract_pod5_signal
+      - extract_pod5_signal_dorado
+
+  - title: Batch processing
+    desc: >
+      Process reads in batches using a supplied function.
+  - contents:
+      - process_pod5
+
+footer:
+  left: >
+    Developed by [Natalia Gumińska](mailto:nguminska@iimcb.gov.pl),
+    [Laboratory of RNA Biology](https://www.iimcb.gov.pl/en/research/41-laboratory-of-rna-biology-era-chairs-group),
+    IIMCB Warsaw.
+  right: Built with [pkgdown](https://pkgdown.r-lib.org/).
+
+news:
+  one_page: true
+  cran_dates: false
