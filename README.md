@@ -1,351 +1,173 @@
 # pod5R
 
-**An R interface to POD5 file format by Oxford Nanopore Technologies**
+**An R interface to POD5 files by Oxford Nanopore Technologies**
 
 ## Introduction
 
-**pod5R** reads Oxford Nanopore POD5 files and returns read metadata, run information, and signal vectors in ordinary R objects. 
-Reading files does not require Python, reticulate, or the R Arrow package.
+**pod5R** reads POD5 files through Oxford Nanopore's native C API. It provides read and run metadata, read selection by UUID, raw and calibrated signal extraction, batch processing, and Dorado split-read signal mapping.
 
-The package supports:
-
-- Reading file information, read identifiers, and sequencing run metadata.
-- Selecting reads by UUID or their position in the file.
-- Extracting raw signal or calibrated current in picoamperes.
-- Extracting selected signal intervals.
-- Processing large files in groups of reads.
-- Extracting signal for Dorado split reads using parent identifiers and sample coordinates.
+Results are returned as ordinary R data frames, lists, and signal vectors. Reading POD5 files does not require Python, reticulate, or the R Arrow package.
 
 The package provides read access. It does not write POD5 files or perform basecalling.
 
-The software is still under active development. All suggestions for improvement are welcome. 
-Please note that the code may change frequently, so use it with caution.
+---
 
 ## Installation
 
-### Requirements
+> **Repository access**
+>
+> The repository is currently private. Sign in to GitHub with an account that has repository access to download the [release assets](https://github.com/LRB-IIMCB/pod5R/releases/tag/v0.1.0).
 
-The precompiled release is available for **Linux x86_64** and installs **R 4.4** in a separate Conda environment.
+### Existing R installation, including RStudio Workbench
 
-The installer requires:
+A precompiled package is available for **Ubuntu 24.04 on x86_64, tested with R 4.4.2**. Other operating systems and R versions have not been tested.
 
-- Conda available in the terminal.
-- An internet connection to GitHub and conda-forge.
-- The commands `curl`, `tar`, `gzip`, and `sha256sum`.
-- A writable installation directory.
+The binary requires glibc ≥ 2.38 and a C++ runtime providing `GLIBCXX_3.4.32`, `CXXABI_1.3.11`, and the earlier symbol versions.
 
-The binary targets glibc 2.28 or newer. Installation has been tested with glibc 2.39. 
-Compatibility with older supported systems has not yet been verified. 
-This binary is not intended for native Windows, macOS, or ARM systems.
+Download:
 
-If Conda is not installed, follow the official [Miniforge installation instructions](https://github.com/conda-forge/miniforge#install). 
-An existing Conda installation can also be used.
+`pod5R_0.1.0_R4.4.2_ubuntu24.04_x86_64.tar.gz`
 
-No compiler, separate POD5 installation, or administrator privileges are required for the precompiled installation in your home directory.
+Save the archive in your home directory on the computer running R. For Workbench, upload it to your home directory on the server using the **Files** pane.
 
-### Install the package
+Restart R if pod5R is already loaded, then run the following in the **R console**:
 
-Run the following commands in a Linux terminal, not in the R console:
+```r
+archive <- path.expand(
+  "~/pod5R_0.1.0_R4.4.2_ubuntu24.04_x86_64.tar.gz"
+)
+
+if (!file.exists(archive)) {
+  stop("The downloaded package archive was not found.", call. = FALSE)
+}
+
+user_library <- path.expand("~/R/library/4.4")
+dir.create(user_library, recursive = TRUE, showWarnings = FALSE)
+.libPaths(c(user_library, .libPaths()))
+
+if (!requireNamespace("Rcpp", quietly = TRUE)) {
+  utils::install.packages(
+    "Rcpp",
+    lib = user_library,
+    repos = "https://cloud.r-project.org"
+  )
+}
+
+utils::install.packages(
+  archive,
+  repos = NULL,
+  type = "source",
+  lib = user_library
+)
+
+library(pod5R)
+```
+
+On Linux, `type = "source"` selects the installation route for the local archive. R recognises this archive as precompiled and installs pod5R without recompiling it.
+
+Rcpp is required; installing Rcpp from source may require compiler tools. The precompiled pod5R package does not require Conda, Python, or a separate POD5 installation.
+
+Installation into this personal library does not require administrator privileges or modify environment modules.
+
+In subsequent R sessions, run:
+
+```r
+.libPaths(c(path.expand("~/R/library/4.4"), .libPaths()))
+library(pod5R)
+```
+
+### Separate Conda environment
+
+This option requires Conda and Linux x86_64. It creates a separate environment containing R 4.4 and pod5R.
+
+Download these two release assets into your home directory on the computer where Conda will run:
+
+- `install-pod5R.sh`
+- `pod5R-0.1.0-linux-64-r44-channel.tar.gz`
+
+Run in a **terminal**:
 
 ```bash
-curl --fail --location \
-  --output install-pod5R.sh \
-  https://github.com/LRB-IIMCB/pod5R/releases/download/v0.1.0/install-pod5R.sh &&
-bash install-pod5R.sh
+bash "$HOME/install-pod5R.sh" \
+  --archive "$HOME/pod5R-0.1.0-linux-64-r44-channel.tar.gz" \
+  --prefix "$HOME/.local/share/pod5R/0.1.0-r44"
 ```
 
-The installer downloads the precompiled package, verifies the archive and package checksums, 
-installs the required dependencies, and checks signal extraction using a bundled POD5 file.
+The destination must not already exist. The installer verifies the archive and package checksums, creates the environment, and checks signal extraction. Internet access to conda-forge is required for dependency downloads.
 
-By default, the environment is installed in:
-
-```text
-~/.local/share/pod5R/0.1.0-r44
-```
-
-The installer creates a separate environment. It does not replace system R, modify installed environment modules, or edit shell startup files.
-
-To use a different location, provide a new absolute path:
-
-```bash
-bash install-pod5R.sh --prefix /absolute/path/to/pod5R-environment
-```
-
-The destination must not already exist.
-
-### Start R with pod5R
-
-For the default installation, run:
+Start the environment's R with:
 
 ```bash
 conda activate "$HOME/.local/share/pod5R/0.1.0-r44"
 R
 ```
 
-If a custom installation directory was used, activate that directory instead.
-
-In R, check that the package loads:
+Then load the package:
 
 ```r
 library(pod5R)
-utils::packageVersion("pod5R")
 ```
 
-Activate the environment whenever starting a new terminal session to work with this installation. 
-See the [Conda environment documentation](https://docs.conda.io/projects/conda/en/stable/user-guide/tasks/manage-environments.html) for further information.
+Activating Conda in a Workbench terminal does not switch the R interpreter used by an already running Workbench R session.
 
-The package is installed for the R version inside this environment. 
-An existing RStudio or RStudio Workbench session will not automatically switch to that R installation. 
-Tt must be configured to use the environment's R executable.
+---
 
 ## General usage
 
-### Choose a POD5 file
-
-The following examples use a small POD5 file included with the package:
+Read the first signal from the bundled example file:
 
 ```r
-file <- system.file(
+pod5_file <- system.file(
   "extdata",
   "drs-filtered.pod5",
   package = "pod5R",
   mustWork = TRUE
 )
-```
 
-To work with your own data, replace this with the file path:
+file_information <- pod5R::read_pod5_info(pod5_file)
+read_ids <- pod5R::read_pod5_ids(pod5_file)
 
-```r
-file <- "/path/to/reads.pod5"
-```
-
-### Read metadata
-
-Read basic file information:
-
-```r
-file_info <- pod5R::read_pod5_info(file)
-print(file_info)
-```
-
-Read metadata for the first five reads:
-
-```r
-reads <- pod5R::read_pod5(file, num_reads = 5)
-print(reads)
-```
-
-Signal data are not loaded unless requested.
-
-Read the UUIDs stored in the file and the sequencing run information:
-
-```r
-read_ids <- pod5R::read_pod5_ids(file)
-utils::head(read_ids)
-
-runs <- pod5R::read_pod5_runs(file)
-utils::str(runs, max.level = 2)
-```
-
-### Extract and plot a signal
-
-Read the first read with calibrated signal:
-
-```r
 result <- pod5R::read_pod5(
-  file,
+  file = pod5_file,
   num_reads = 1,
   signal = TRUE,
   calibrated = TRUE
 )
 
-signal <- result$signal[[1]]
+read_metadata <- result$reads
+signal_pa <- result$signal[[1]]
 
-graphics::plot(
-  x = seq_along(signal),
-  y = signal,
-  type = "l",
-  col = "#3a414d",
-  xlab = "sample",
-  ylab = "signal [pA]",
-  main = result$reads$read_id[1]
-)
+length(signal_pa)
+# 21908
 ```
 
-The result contains two components:
+Replace `pod5_file` with the path to your own POD5 file. Use `calibrated = FALSE` to extract raw integer signal instead of current in picoamperes.
 
-- `reads`: a data frame containing metadata for the selected reads.
-- `signal`: a list of signal vectors named by read UUID.
+For Dorado split reads, use `extract_pod5_signal_dorado()` with a metadata table containing `read_id`, `pi`, `sp`, `ts`, and `ns`. The function maps child reads to the corresponding parent signal; it does not parse BAM files automatically.
 
-Use `calibrated = FALSE` to obtain raw integer ADC counts instead of current in picoamperes.
-
-Signals are returned in acquisition order.
-
-### Select reads by UUID
-
-Select the first two UUIDs from the file:
-
-```r
-read_ids <- pod5R::read_pod5_ids(file)
-selected_ids <- utils::head(read_ids, 2)
-
-selected <- pod5R::read_pod5(
-  file,
-  read_ids = selected_ids,
-  signal = TRUE
-)
-```
-
-When selecting by UUID, leave `first_read` and `num_reads` at their defaults. 
-Missing UUIDs and duplicate identifiers in the selection cause an error.
-
-### Extract a signal interval
-
-Extract samples 101 through 500 from one read:
-
-```r
-signals <- pod5R::extract_pod5_signal(
-  file,
-  read_ids = selected_ids[1],
-  start_sample = 101,
-  end_sample = 500,
-  calibrated = TRUE
-)
-
-signal_interval <- signals[[1]]
-```
-
-Sample coordinates are one-based and inclusive, following R indexing. The interval above contains up to 400 samples. 
-Intervals extending beyond the read are clipped.
-
-### Process large files in groups
-
-Use `process_pod5()` to process consecutive groups without keeping all reads in memory:
-
-```r
-pod5R::process_pod5(
-  file,
-  FUN = function(reads) {
-    cat(
-      "Reads:", nrow(reads),
-      "| Signal samples:", sum(reads$num_samples),
-      "\n"
-    )
-  },
-  part_size = 1000,
-  signal = FALSE
-)
-```
-
-With `signal = FALSE`, the callback receives a metadata data frame. With `signal = TRUE`, it receives a list containing `reads` and `signal`.
-
-Callback return values are not collected. Save any required results inside the callback. 
-Memory use depends on the number and length of reads in each group.
-
-### Work with Dorado split reads
-
-Dorado split-read UUIDs generally differ from the UUIDs stored in the original POD5 file. 
-Selecting a split child UUID directly with `read_pod5()` is therefore insufficient.
-
-Use `extract_pod5_signal_dorado()` with a data frame containing one row per Dorado read and the following columns:
-
-| column | description |
-|---|---|
-| `read_id` | Dorado read UUID from the SAM/BAM query name |
-| `pi` | Parent POD5 read UUID |
-| `sp` | Split-read start coordinate within the parent signal |
-| `ts` | Number of signal samples trimmed from the start |
-| `ns` | End coordinate of the signal interval used for basecalling |
-
-The tag definitions are described in the [Dorado SAM specification](https://software-docs.nanoporetech.com/dorado/latest/basecaller/sam_spec/).
-
-After preparing this data frame as `dorado_reads`:
-
-```r
-signals <- pod5R::extract_pod5_signal_dorado(
-  file,
-  reads = dorado_reads,
-  calibrated = TRUE
-)
-```
-
-Supply the original tag values. The function handles their conversion to R sample coordinates.
-
-This function does not read BAM files directly or reconstruct missing tags. Duplex consensus reads are not supported.
-
-For the full input requirements, including unsplit reads, see:
-
-```r
-help("extract_pod5_signal_dorado", package = "pod5R")
-```
-
-## Function reference
-
-| function | purpose |
-|---|---|
-| `open_pod5()` | Open a reusable POD5 reader |
-| `close_pod5()` | Close a reader opened explicitly |
-| `read_pod5_info()` | Read file information |
-| `read_pod5_ids()` | Read UUIDs stored in the file |
-| `read_pod5_runs()` | Read sequencing run information |
-| `read_pod5()` | Read metadata and optional signal |
-| `extract_pod5_signal()` | Extract signal vectors or intervals |
-| `extract_pod5_signal_dorado()` | Extract signal using Dorado read and parent metadata |
-| `process_pod5()` | Process consecutive groups of reads |
-
-Functions accepting a file path open and close the file internally. If a reader is opened explicitly with `open_pod5()`, close it with `close_pod5()` when finished.
-
-Detailed help is available from R:
+Function documentation is available in R:
 
 ```r
 help(package = "pod5R")
+?pod5R::read_pod5
+?pod5R::extract_pod5_signal_dorado
 ```
+
+---
 
 ## Troubleshooting
 
-### R reports that pod5R is not installed
+If you encounter a bug, please [open an issue](https://github.com/LRB-IIMCB/pod5R/issues). Include your operating system, R version, installation method, complete error message, and a minimal reproducible example.
 
-Check that R was started from the Conda environment containing the package:
+The software is still under active development. All suggestions for improvement are welcome. Please note that the code may change frequently, so use it with caution.
 
-```bash
-conda activate "$HOME/.local/share/pod5R/0.1.0-r44"
-R
-```
+---
 
-For a custom installation, use its actual environment path.
+## Maintainer
 
-Within R, inspect the current installation and library paths:
+Any issues regarding **pod5R** should be addressed to Natalia Gumińska (nguminska (at) iimcb.gov.pl).
 
-```r
-R.home()
-.libPaths()
-```
-
-A package installed in the Conda environment is not automatically available to a different R installation.
-
-### The installer reports that the destination already exists
-
-If the earlier installation succeeded, activate the existing environment. To create another installation, provide a new directory with `--prefix`.
-
-### A read UUID cannot be found
-
-Check that the UUID belongs to the selected POD5 file. For Dorado split reads, use `extract_pod5_signal_dorado()` with the parent identifier and required sample tags.
-
-### Reading signals uses too much memory
-
-Select fewer reads, restrict the signal interval, or use `process_pod5()` with a smaller `part_size`. 
-Reading metadata alone does not load signal vectors.
-
-### Reporting a problem
-
-Please open an [issue on GitHub](https://github.com/LRB-IIMCB/pod5R/issues). 
-Include the command that failed, the complete error message, and a minimal reproducible example.
-
-For R errors, include:
-
-```r
-utils::sessionInfo()
-```
+**pod5R** was developed in the <a href="https://www.iimcb.gov.pl/en/research/41-laboratory-of-rna-biology-era-chairs-group">Laboratory of RNA Biology</a> (Dziembowski Lab) at the <a href="https://www.iimcb.gov.pl/en/">International Institute of Molecular and Cell Biology</a> in Warsaw.
 
 ## Maintainer
 
