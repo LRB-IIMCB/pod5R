@@ -1,3 +1,17 @@
+# pod5r 0.2.0 (development)
+
+## Bug fixes
+
+* **Heap memory is no longer overwritten when pore types and end reasons are read.**
+  The pinned POD5 C API (`c0be435`) writes the string terminator one byte past the
+  size it reports in `pod5_get_pore_type()` and `pod5_get_end_reason()`. The native
+  reader now allocates one additional byte for both buffers. The issue affected every
+  metadata request through `read_pod5()`, `extract_pod5_signal()`, `process_pod5()`,
+  and `extract_pod5_signal_dorado()`. Returned values are unchanged, but the overflow
+  could corrupt memory and cause unpredictable crashes on other data or systems.
+  
+  
+
 # pod5r 0.1.0 (development)
 
 ## Native POD5 reading
