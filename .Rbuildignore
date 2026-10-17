@@ -16,3 +16,6 @@
 ^LICENSE$
 ^LICENSE\.md$
 ^packaging$
+^_pkgdown\.yml$
+^pkgdown$
+^\.github$

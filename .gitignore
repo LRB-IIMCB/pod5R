@@ -18,6 +18,4 @@
 __pycache__/
 *.pyc
 
-^_pkgdown\.yml$
-^pkgdown$
-^\.github$
+
