@@ -452,8 +452,9 @@ List cpp_reads_pod5(
                                                                     &dummy, &size);
       // The expected response to the first is intentionally POD5_ERROR_STRING_NOT_LONG_ENOUGH
       if (status != POD5_ERROR_STRING_NOT_LONG_ENOUGH) check(status);
-      std::vector<char> text(size); check(pod5_get_pore_type(batch.get(), info.pore_type,
-                                          text.data(), &size));
+      // libpod5 writes the terminator one byte past the reported size, so allocate a spare byte
+      std::vector<char> text(size + 1); check(pod5_get_pore_type(batch.get(), info.pore_type,
+                                              text.data(), &size));
       // Copy string into std::string before the tmp vector disappears
       pores[info.pore_type] = text.data();
     }
@@ -468,8 +469,9 @@ List cpp_reads_pod5(
       // Buffer-too-small is expected
       if (status != POD5_ERROR_STRING_NOT_LONG_ENOUGH) check(status);
       // Get complete end-reason
-      std::vector<char> text(size); check(pod5_get_end_reason(batch.get(), info.end_reason, &value,
-                                          text.data(), &size));
+      // libpod5 writes the terminator one byte past the reported size, so allocate a spare byte
+      std::vector<char> text(size + 1); check(pod5_get_end_reason(batch.get(), info.end_reason, &value,
+                                              text.data(), &size));
       reasons[info.end_reason] = text.data();
     }
     end_reason[i] = reasons.at(info.end_reason);
