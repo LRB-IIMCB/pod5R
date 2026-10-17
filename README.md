@@ -26,7 +26,7 @@ The binary requires glibc ≥ 2.38 and a C++ runtime providing `GLIBCXX_3.4.32`,
 
 Download:
 
-`pod5R_0.1.0_R4.4.2_ubuntu24.04_x86_64.tar.gz`
+`pod5R_0.2.0_R4.4.2_ubuntu24.04_x86_64.tar.gz`
 
 Save the archive in your home directory on the computer running R. For Workbench, upload it to your home directory on the server using the **Files** pane.
 
@@ -34,7 +34,7 @@ Restart R if pod5R is already loaded, then run the following in the **R console*
 
 ```r
 archive <- path.expand(
-  "~/pod5R_0.1.0_R4.4.2_ubuntu24.04_x86_64.tar.gz"
+  "~/pod5R_0.2.0_R4.4.2_ubuntu24.04_x86_64.tar.gz"
 )
 
 if (!file.exists(archive)) {
@@ -83,14 +83,14 @@ This option requires Conda and Linux x86_64. It creates a separate environment c
 Download these two release assets into your home directory on the computer where Conda will run:
 
 - `install-pod5R.sh`
-- `pod5R-0.1.0-linux-64-r44-channel.tar.gz`
+- `pod5R-0.2.0-linux-64-r44-channel.tar.gz`
 
 Run in a **terminal**:
 
 ```bash
 bash "$HOME/install-pod5R.sh" \
-  --archive "$HOME/pod5R-0.1.0-linux-64-r44-channel.tar.gz" \
-  --prefix "$HOME/.local/share/pod5R/0.1.0-r44"
+  --archive "$HOME/pod5R-0.2.0-linux-64-r44-channel.tar.gz" \
+  --prefix "$HOME/.local/share/pod5R/0.2.0-r44"
 ```
 
 The destination must not already exist. The installer verifies the archive and package checksums, creates the environment, and checks signal extraction. Internet access to conda-forge is required for dependency downloads.
@@ -98,7 +98,7 @@ The destination must not already exist. The installer verifies the archive and p
 Start the environment's R with:
 
 ```bash
-conda activate "$HOME/.local/share/pod5R/0.1.0-r44"
+conda activate "$HOME/.local/share/pod5R/0.2.0-r44"
 R
 ```
 
