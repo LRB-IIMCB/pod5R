@@ -6,7 +6,7 @@ package:
 
 source:
   - url: "{{ environ['POD5R_SOURCE_URL'] }}"
-    sha256: c86b63e5d7037d5a90bbb78a810a3efe5356dd999d1378789eb058880c00b5ad
+    sha256: 3db690098dad2044a31b1b702705cbb4f36c598b1f2221e5889bd7b613473def
     folder: r-package
 
   - git_url: https://github.com/nanoporetech/pod5-file-format.git

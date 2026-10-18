@@ -2,13 +2,13 @@
 
 set -euo pipefail
 
-POD5R_VERSION="0.1.0"
-POD5R_ARCHIVE_NAME="pod5R-0.1.0-linux-64-r44-channel.tar.gz"
-POD5R_ARCHIVE_SHA256="38c3fb61b259bd282cb6ad86631b0d7d384c1c35e7328bccf5fd97e68589383e"
-POD5R_BINARY_NAME="r-pod5r-0.1.0-r44h36d892c_0.conda"
-POD5R_BINARY_SHA256="2d3d472ac16d3665106b8678bed8e2af04507d71c4cc6a5097779b04ef40b337"
-POD5R_URL="https://github.com/LRB-IIMCB/pod5R/releases/download/v0.1.0/$POD5R_ARCHIVE_NAME"
-POD5R_PREFIX="$HOME/.local/share/pod5R/0.1.0-r44"
+POD5R_VERSION="0.2.0"
+POD5R_ARCHIVE_NAME="pod5R-0.2.0-linux-64-r44-channel.tar.gz"
+POD5R_ARCHIVE_SHA256="fae7c19422d8ee7f264a50bd91e38dcbaa87a654cfa41b8e02356fcf0f0c6734"
+POD5R_BINARY_NAME="r-pod5r-0.2.0-r44h36d892c_0.conda"
+POD5R_BINARY_SHA256="b20c4d58799df9a4ab6f78ff779a1734c4ec200b335b59c8e4905711ae649236"
+POD5R_URL="https://github.com/LRB-IIMCB/pod5R/releases/download/v0.2.0/$POD5R_ARCHIVE_NAME"
+POD5R_PREFIX="$HOME/.local/share/pod5R/0.2.0-r44"
 POD5R_ARCHIVE=""
 
 fail() {
@@ -124,7 +124,7 @@ export CONDA_SUBDIR=linux-64
     --strict-channel-priority \
     --no-default-packages \
     --yes \
-    "r-pod5r=0.1.0=r44h36d892c_0"
+    "r-pod5r=0.2.0=r44h36d892c_0"
 
 "$POD5R_CONDA" run \
     --prefix "$POD5R_PREFIX" \
@@ -142,7 +142,7 @@ file <- system.file(
 result <- pod5R::read_pod5(file, num_reads = 1, signal = TRUE)
 signal <- result$signal[[1]]
 
-if (as.character(utils::packageVersion("pod5R")) != "0.1.0" ||
+if (as.character(utils::packageVersion("pod5R")) != "0.2.0" ||
     !is.integer(signal) ||
     length(signal) == 0L ||
     length(signal) != result$reads$num_samples[1]) {
