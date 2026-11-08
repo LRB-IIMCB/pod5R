@@ -1,4 +1,4 @@
-# pod5R
+# pod5R <img src="man/figures/logo.png" align="right" height="139" alt="" />
 
 **An R interface to POD5 files by Oxford Nanopore Technologies**
 
