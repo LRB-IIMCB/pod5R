@@ -14,9 +14,6 @@ The package provides read access. It does not write POD5 files or perform baseca
 
 ## Installation
 
-> **Repository access**
->
-> The repository is currently private. Sign in to GitHub with an account that has repository access to download the [release assets](https://github.com/LRB-IIMCB/pod5R/releases/tag/v0.1.0).
 
 ### Existing R installation, including RStudio Workbench
 
