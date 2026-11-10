@@ -1,0 +1,11 @@
+pandoc: 3.6.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles:
+  batch_plotting: batch_plotting.html
+  pod5R: pod5R.html
+  signal_extraction: signal_extraction.html
+last_built: 2026-11-10T22:25Z
+urls:
+  reference: https://lrb-iimcb.github.io/pod5R/reference
+  article: https://lrb-iimcb.github.io/pod5R/articles
