@@ -47,9 +47,19 @@ navbar:
   bg: primary
   type: dark
   structure:
-    left: [reference, news]
+    left: [intro, reference, articles, news]
     right: [search, github]
   components:
+    intro:
+      text: Get started
+      href: articles/pod5R.html
+    articles:
+      text: Articles
+      menu:
+        - text: Signal extraction and plotting
+          href: articles/signal_extraction.html
+        - text: Plotting signals in batch
+          href: articles/batch_plotting.html
     github:
       icon: fab fa-github
       href: https://github.com/LRB-IIMCB/pod5R
