@@ -10,7 +10,12 @@ Results are returned as ordinary R data frames, lists, and signal vectors. Readi
 
 The package provides read access. It does not write POD5 files or perform basecalling.
 
+
 ---
+
+## Documentation
+
+**Full documentation:** https://lrb-iimcb.github.io/pod5R/
 
 ## Installation
 
