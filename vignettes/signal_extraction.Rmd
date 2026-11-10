@@ -317,7 +317,7 @@ The whole signal, with the extracted interval shaded:
 ```{r ggplot-whole-shaded, eval = has_ggplot2, fig.width = 10, fig.height = 3.5}
 g.base <- ggplot2::ggplot(signal_df, ggplot2::aes(x = position, y = pa))
 g.rect <- ggplot2::annotate("rect", xmin = window_start, xmax = window_end,
-                            ymin = -Inf, ymax = Inf, fill = "#f56042", alpha = .15)
+                            ymin = -Inf, ymax = Inf, fill = "#449434", alpha = .15)
 g.line <- ggplot2::geom_line(color = "#3a414d")
 g.labs <- ggplot2::labs(title = "Whole calibrated signal",
                         subtitle = paste0(selected$read_id, ", interval ",
@@ -327,6 +327,7 @@ g.labs <- ggplot2::labs(title = "Whole calibrated signal",
 
 plot_full <- g.base + g.rect + g.line + g.labs + ggplot2::theme_bw()
 print(plot_full)
+
 ```
 
 The interval alone. For the purpose of this example, the poly(A) tail was selected. Its shape matches the shaded part of the plot above:
