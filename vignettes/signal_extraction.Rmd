@@ -291,7 +291,7 @@ A signal interval is plotted the same way. Positions are offset by `start_sample
 In the example below, the interval delimited by `window_start` and `window_end` is extracted from the selected read (the same previous one, i.e. the read already shown in the plots above), The read identifier is displayed in the subtitle of both plots.
 
 
-```{r ggplot-interval, eval = has_ggplot2, fig.width = 10, fig.height = 3.5}
+```{r ggplot-ival, eval = has_ggplot2, fig.width = 10, fig.height = 3.5}
 
 window_signal <- pod5R::extract_pod5_signal(pod5_file,
                                             read_ids = selected$read_id,
